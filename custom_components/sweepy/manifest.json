@@ -1,0 +1,11 @@
+{
+  "domain": "sweepy",
+  "name": "Sweepy",
+  "version": "1.0.0",
+  "documentation": "https://sweepy.com",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "codeowners": [],
+  "requirements": [],
+  "config_flow": true
+}

@@ -1,0 +1,29 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Sweepy",
+        "description": "Enter your Sweepy account credentials.",
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate Sweepy",
+        "description": "Your Sweepy credentials are no longer valid. Please re-enter them.",
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid email or password.",
+      "cannot_connect": "Unable to connect to Sweepy servers."
+    },
+    "abort": {
+      "already_configured": "This Sweepy account is already configured."
+    }
+  }
+}
