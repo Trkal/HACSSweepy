@@ -12,5 +12,6 @@ OAUTH_TOKEN_URL: Final = "/oauth/token"
 
 CONF_EMAIL: Final = "email"
 CONF_PASSWORD: Final = "password"
+CONF_TOKEN: Final = "token"
 
 DEFAULT_SCAN_INTERVAL: Final = 300  # 5 minutes

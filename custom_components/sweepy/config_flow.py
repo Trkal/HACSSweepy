@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import SweepyApiClient, SweepyAuthError
-from .const import CONF_EMAIL, CONF_PASSWORD, DOMAIN
+from .const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN, DOMAIN
 
 
 class SweepyConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -45,6 +45,7 @@ class SweepyConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_EMAIL: user_input[CONF_EMAIL],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        CONF_TOKEN: client.get_token_data(),
                     },
                 )
 
@@ -88,6 +89,7 @@ class SweepyConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates={
                         CONF_EMAIL: user_input[CONF_EMAIL],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        CONF_TOKEN: client.get_token_data(),
                     },
                 )
 

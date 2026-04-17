@@ -33,6 +33,24 @@ class SweepyApiClient:
     def resource_owner_id(self) -> str | None:
         return self._resource_owner_id
 
+    def get_token_data(self) -> dict[str, Any]:
+        """Export current token state for persistence."""
+        return {
+            "access_token": self._access_token,
+            "refresh_token": self._refresh_token,
+            "token_type": self._token_type,
+            "expires_at": self._expires_at,
+            "resource_owner_id": self._resource_owner_id,
+        }
+
+    def set_token_data(self, data: dict[str, Any]) -> None:
+        """Restore token state from persisted data."""
+        self._access_token = data.get("access_token")
+        self._refresh_token = data.get("refresh_token")
+        self._token_type = data.get("token_type", "Bearer")
+        self._expires_at = data.get("expires_at", 0)
+        self._resource_owner_id = data.get("resource_owner_id")
+
     async def async_login(self, email: str, password: str) -> dict[str, Any]:
         """Authenticate with email and password. Returns token data."""
         data = {
