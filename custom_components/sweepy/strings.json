@@ -23,7 +23,8 @@
       "cannot_connect": "Unable to connect to Sweepy servers."
     },
     "abort": {
-      "already_configured": "This Sweepy account is already configured."
+      "already_configured": "This Sweepy account is already configured.",
+      "wrong_account": "Those credentials are for a different Sweepy account. Please sign in with the account this integration was set up with."
     }
   }
 }

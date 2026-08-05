@@ -15,3 +15,7 @@ CONF_PASSWORD: Final = "password"
 CONF_TOKEN: Final = "token"
 
 DEFAULT_SCAN_INTERVAL: Final = 300  # 5 minutes
+
+# Refresh this many seconds before the access token actually expires, so a
+# token never goes stale part-way through a poll cycle.
+TOKEN_EXPIRY_BUFFER: Final = 300

@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from typing import Any
+
+import aiohttp
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -20,30 +24,38 @@ type SweepyConfigEntry = ConfigEntry[SweepyCoordinator]
 async def async_setup_entry(hass: HomeAssistant, entry: SweepyConfigEntry) -> bool:
     """Set up Sweepy from a config entry."""
     session = async_get_clientsession(hass)
-    client = SweepyApiClient(session)
 
-    token_restored = False
-    saved_token = entry.data.get(CONF_TOKEN)
-    if saved_token:
-        client.set_token_data(saved_token)
-        try:
-            await client.async_refresh_token()
-            token_restored = True
-            LOGGER.debug("Restored session using saved refresh token")
-        except (SweepyAuthError, Exception):
-            LOGGER.debug("Saved refresh token expired, falling back to password login")
+    @callback
+    def _persist_token(token_data: dict[str, Any]) -> None:
+        """Write a rotated token back to the entry the moment it changes.
 
-    if not token_restored:
-        try:
-            await client.async_login(entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD])
-        except SweepyAuthError as err:
-            raise ConfigEntryAuthFailed(str(err)) from err
-        except Exception as err:
-            raise ConfigEntryNotReady(f"Failed to connect: {err}") from err
+        Persisting eagerly (rather than after a successful poll) means a
+        rotation is never lost when a later request in the same cycle fails.
+        """
+        if entry.data.get(CONF_TOKEN) != token_data:
+            hass.config_entries.async_update_entry(
+                entry, data={**entry.data, CONF_TOKEN: token_data}
+            )
 
-    hass.config_entries.async_update_entry(
-        entry, data={**entry.data, CONF_TOKEN: client.get_token_data()}
+    client = SweepyApiClient(
+        session,
+        email=entry.data[CONF_EMAIL],
+        password=entry.data[CONF_PASSWORD],
+        token_callback=_persist_token,
     )
+
+    if saved_token := entry.data.get(CONF_TOKEN):
+        client.set_token_data(saved_token)
+        LOGGER.debug("Restored saved Sweepy token from config entry")
+
+    # Only hits the network if the saved token is missing or near expiry, and
+    # falls back to a password login by itself if the refresh chain is broken.
+    try:
+        await client.async_ensure_authenticated()
+    except SweepyAuthError as err:
+        raise ConfigEntryAuthFailed(str(err)) from err
+    except (aiohttp.ClientError, TimeoutError) as err:
+        raise ConfigEntryNotReady(f"Failed to connect: {err}") from err
 
     coordinator = SweepyCoordinator(hass, client, entry)
 

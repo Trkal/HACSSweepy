@@ -12,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import SweepyApiClient, SweepyAuthError, SweepyApiError
-from .const import CONF_TOKEN, DEFAULT_SCAN_INTERVAL, LOGGER
+from .const import DEFAULT_SCAN_INTERVAL, LOGGER
 
 
 class SweepyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -37,7 +37,6 @@ class SweepyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the Sweepy API."""
-        prev_token = self.client.get_token_data()
         try:
             schedule, rooms, profiles, schedules = await asyncio.gather(
                 self.client.async_get_today_schedule(),
@@ -46,18 +45,13 @@ class SweepyCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.client.async_get_schedules(),
             )
         except SweepyAuthError as err:
+            # The client already tried a refresh and a password login, so this
+            # means the stored credentials themselves are no longer valid.
             raise ConfigEntryAuthFailed(str(err)) from err
         except SweepyApiError as err:
             raise UpdateFailed(str(err)) from err
         except Exception as err:
             raise UpdateFailed(f"Unexpected error: {err}") from err
-
-        new_token = self.client.get_token_data()
-        if new_token != prev_token:
-            self.hass.config_entries.async_update_entry(
-                self.config_entry,
-                data={**self.config_entry.data, CONF_TOKEN: new_token},
-            )
 
         # Build a task lookup from the full schedules data
         tasks_by_id: dict[str, dict] = {}
